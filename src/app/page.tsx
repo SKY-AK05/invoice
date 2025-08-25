@@ -7,9 +7,11 @@ import { processInvoice } from '@/app/actions';
 import { useToast } from "@/hooks/use-toast";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { InvoiceUploader } from '@/components/invoice-uploader';
 import { InvoiceTable } from '@/components/invoice-table';
 import { Logo } from '@/components/icons';
+import { XCircle } from 'lucide-react';
 
 type ProcessingStatus = 'idle' | 'processing' | 'completed' | 'error';
 type InvoiceEntry = Extract<ExtractInvoiceDataOutput, any[]>[number];
@@ -24,7 +26,7 @@ export default function Home() {
     const response = await processInvoice(fileDataUri);
 
     if (response.success) {
-      setResults(prevResults => [...prevResults, ...response.data]);
+      setResults(response.data);
       setStatus('completed');
       toast({
         title: "Extraction Complete",
@@ -42,6 +44,11 @@ export default function Home() {
     }
   };
   
+  const handleClearResults = () => {
+    setResults([]);
+    setStatus('idle');
+  }
+
   const isProcessing = status === 'processing';
 
   return (
@@ -73,11 +80,16 @@ export default function Home() {
           
           {(status === 'completed' || results.length > 0) && (
              <Card>
-              <CardHeader>
-                <CardTitle>Extracted Data</CardTitle>
-                <CardDescription>
-                  Review the extracted invoice details below and export to CSV.
-                </CardDescription>
+              <CardHeader className="flex flex-row items-start justify-between">
+                <div>
+                  <CardTitle>Extracted Data</CardTitle>
+                  <CardDescription>
+                    Review the extracted invoice details below and export to CSV.
+                  </CardDescription>
+                </div>
+                <Button variant="ghost" size="icon" onClick={handleClearResults} aria-label="Clear results">
+                  <XCircle className="h-5 w-5 text-muted-foreground" />
+                </Button>
               </CardHeader>
               <CardContent>
                 <InvoiceTable data={results} />
