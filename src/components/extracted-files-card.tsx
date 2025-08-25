@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FileText, Loader2, CheckCircle2, XCircle, AlertCircle, Play } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface ExtractedFile {
   id: string;
@@ -19,13 +20,6 @@ interface ExtractedFilesCardProps {
   onClear: () => void;
 }
 
-const statusIcons = {
-  idle: <Play className="h-5 w-5 text-primary" />,
-  processing: <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />,
-  completed: <CheckCircle2 className="h-5 w-5 text-green-500" />,
-  error: <AlertCircle className="h-5 w-5 text-red-500" />,
-};
-
 const statusText = {
     idle: "Ready to process",
     processing: "Processing...",
@@ -36,33 +30,16 @@ const statusText = {
 
 export function ExtractedFilesCard({ files, onProcessFile, onClear }: ExtractedFilesCardProps) {
 
-  const getProcessButton = (file: ExtractedFile) => {
+  const getStatusIcon = (file: ExtractedFile) => {
     switch (file.status) {
         case 'idle':
-            return (
-                <Button variant="ghost" size="icon" onClick={() => onProcessFile(file)}>
-                    <Play className="h-5 w-5" />
-                    <span className="sr-only">Process</span>
-                </Button>
-            );
+            return <Play className="h-5 w-5 text-primary" />;
         case 'processing':
-            return (
-                <div className="flex items-center justify-center w-10 h-10">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
-            );
+            return <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />;
         case 'completed':
-             return (
-                <div className="flex items-center justify-center w-10 h-10">
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
-                </div>
-            );
+            return <CheckCircle2 className="h-5 w-5 text-green-500" />;
         case 'error':
-             return (
-                <div className="flex items-center justify-center w-10 h-10">
-                    <AlertCircle className="h-5 w-5 text-destructive" />
-                </div>
-            );
+             return <AlertCircle className="h-5 w-5 text-destructive" />;
     }
   }
   
@@ -83,13 +60,30 @@ export function ExtractedFilesCard({ files, onProcessFile, onClear }: ExtractedF
         <ScrollArea className="h-72 w-full pr-4">
           <div className="space-y-3">
             {files.map((file) => (
-              <div key={file.id} className="flex items-center p-2 rounded-md border">
+              <div 
+                key={file.id} 
+                className={cn(
+                  "flex items-center p-2 rounded-md border transition-colors",
+                  file.status === 'idle' && "cursor-pointer hover:bg-accent hover:border-primary"
+                )}
+                onClick={() => file.status === 'idle' && onProcessFile(file)}
+                role={file.status === 'idle' ? 'button' : undefined}
+                tabIndex={file.status === 'idle' ? 0 : -1}
+                onKeyDown={(e) => {
+                  if ((e.key === 'Enter' || e.key === ' ') && file.status === 'idle') {
+                    e.preventDefault();
+                    onProcessFile(file);
+                  }
+                }}
+              >
                 <FileText className="h-6 w-6 mr-3 text-muted-foreground" />
                 <div className="flex-1 truncate">
                   <p className="text-sm font-medium truncate">{file.name}</p>
                   <p className="text-xs text-muted-foreground">{statusText[file.status]}</p>
                 </div>
-                {getProcessButton(file)}
+                <div className="flex items-center justify-center w-10 h-10">
+                  {getStatusIcon(file)}
+                </div>
               </div>
             ))}
           </div>
