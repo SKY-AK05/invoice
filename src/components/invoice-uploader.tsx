@@ -5,6 +5,8 @@ import { useState, useCallback, type DragEvent } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { UploadCloud, File as FileIcon, Loader2 } from 'lucide-react';
+import { DrivePicker } from './drive-picker';
+import { Separator } from './ui/separator';
 
 interface InvoiceUploaderProps {
   onFileUpload: (fileDataUri: string) => void;
@@ -49,6 +51,11 @@ export function InvoiceUploader({ onFileUpload, isProcessing }: InvoiceUploaderP
     reader.readAsDataURL(file);
   }, [onFileUpload, toast]);
 
+  const handleDriveFileSelect = (dataUri: string, driveFileName: string) => {
+    setFileName(driveFileName);
+    onFileUpload(dataUri);
+  }
+
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -77,7 +84,7 @@ export function InvoiceUploader({ onFileUpload, isProcessing }: InvoiceUploaderP
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full space-y-4">
       <label
         htmlFor="file-upload"
         className={cn(
@@ -116,6 +123,14 @@ export function InvoiceUploader({ onFileUpload, isProcessing }: InvoiceUploaderP
           disabled={isProcessing}
         />
       </label>
+
+      <div className="flex items-center gap-4">
+        <Separator className="flex-1" />
+        <span className="text-xs text-muted-foreground">OR</span>
+        <Separator className="flex-1" />
+      </div>
+
+      <DrivePicker onFileSelect={handleDriveFileSelect} isProcessing={isProcessing} />
     </div>
   );
 }
