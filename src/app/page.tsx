@@ -38,7 +38,7 @@ export default function Home() {
     
     const response = await processInvoice(file.dataUri);
 
-    if (response.success) {
+    if (response.success && response.data.length > 0) {
       setResults(prevResults => [...prevResults, ...response.data]);
       setExtractedFiles(prevFiles => prevFiles.map(f => 
         f.id === file.id ? { ...f, status: 'completed' } : f
@@ -54,7 +54,7 @@ export default function Home() {
       toast({
         variant: "destructive",
         title: "Extraction Failed",
-        description: response.error,
+        description: response.success === false ? response.error : `No invoice data found in ${file.name}.`,
       });
     }
   };
@@ -93,10 +93,12 @@ export default function Home() {
        setExtractedFiles(prev => prev.map(f => f.id === file.id ? {...f, status: 'idle'} : f));
      }
   }
+  
+  const hasContent = extractedFiles.length > 0 || results.length > 0;
 
   return (
-    <div className="min-h-screen w-full font-body">
-      <header className="border-b">
+    <div className="min-h-screen w-full font-body flex flex-col">
+      <header className="border-b bg-card">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
           <div className="flex items-center gap-3">
             <Logo className="h-7 w-7 text-primary" />
@@ -104,7 +106,7 @@ export default function Home() {
               Invoice Insights
             </h1>
           </div>
-          {(extractedFiles.length > 0 || results.length > 0) && (
+          {hasContent && (
              <Button variant="ghost" size="sm" onClick={handleClearAll}>
                 <XCircle className="h-4 w-4 mr-2" />
                 Clear All
@@ -113,15 +115,15 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="container mx-auto py-8 px-4 md:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      <main className="flex-1 container mx-auto py-8 px-4 md:px-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 items-start">
           
-          <div className="space-y-8">
-            <Card>
+          <div className="col-span-1 md:col-span-1 lg:col-span-2 space-y-8">
+            <Card className="shadow-lg">
               <CardHeader>
                 <CardTitle className="text-2xl">Upload Invoices</CardTitle>
                 <CardDescription>
-                  Drop a Word, PDF, or ZIP file below. Our AI will automatically extract the details.
+                  Drop a Word, PDF, or ZIP file. Our AI will extract the details.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -138,9 +140,9 @@ export default function Home() {
             )}
           </div>
           
-          <div className="lg:col-span-1">
-            {results.length > 0 && (
-              <Card>
+          <div className="col-span-1 md:col-span-1 lg:col-span-3">
+            {results.length > 0 ? (
+              <Card className="shadow-lg">
                 <CardHeader>
                   <div>
                     <CardTitle>Extracted Data</CardTitle>
@@ -153,12 +155,20 @@ export default function Home() {
                   <InvoiceTable data={results} />
                 </CardContent>
               </Card>
+            ) : (
+                <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg h-full">
+                    <div className="mb-4">
+                        <svg className="w-16 h-16 text-muted-foreground mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    </div>
+                    <h3 className="text-xl font-semibold text-foreground">No data yet</h3>
+                    <p className="text-muted-foreground mt-2">Upload an invoice to see the extracted data here.</p>
+                </div>
             )}
           </div>
         </div>
       </main>
 
-      <footer className="border-t py-6 mt-8">
+      <footer className="border-t py-6 mt-auto bg-card">
         <div className="container mx-auto text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} Invoice Insights. All rights reserved.</p>
         </div>
