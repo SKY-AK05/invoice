@@ -21,11 +21,22 @@ const acceptedFileTypes = [
   'application/zip',
 ];
 
+const fileExtensionsToMimeType: Record<string, string> = {
+    "pdf": "application/pdf",
+    "doc": "application/msword",
+    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+}
+
 export function InvoiceUploader({ onFilesExtract }: InvoiceUploaderProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusText, setStatusText] = useState("Click to upload or drag and drop");
   const { toast } = useToast();
+
+  const getMimeTypeFromFileName = (filename: string): string | undefined => {
+    const extension = filename.split('.').pop()?.toLowerCase();
+    return extension ? fileExtensionsToMimeType[extension] : undefined;
+  }
 
   const handleFile = useCallback(async (file: File) => {
     if (!acceptedFileTypes.includes(file.type)) {
@@ -47,12 +58,19 @@ export function InvoiceUploader({ onFilesExtract }: InvoiceUploaderProps) {
         const filePromises = Object.keys(zip.files).map(async (filename) => {
           const zipEntry = zip.files[filename];
           if (!zipEntry.dir) {
+            const mimeType = getMimeTypeFromFileName(filename);
+            if (!mimeType) return; // Skip files with unsupported extensions
+
             const blob = await zipEntry.async('blob');
+            
+            // Recreate blob with correct MIME type
+            const typedBlob = new Blob([blob], { type: mimeType });
+
             const dataUri = await new Promise<string>((resolve, reject) => {
               const reader = new FileReader();
               reader.onload = (e) => resolve(e.target?.result as string);
               reader.onerror = (err) => reject(err);
-              reader.readAsDataURL(blob);
+              reader.readAsDataURL(typedBlob);
             });
             extractedFiles.push({
               id: self.crypto.randomUUID(),
