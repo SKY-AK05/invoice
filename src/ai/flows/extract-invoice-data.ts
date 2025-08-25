@@ -30,10 +30,11 @@ const InvoiceEntrySchema = z.object({
   clientId: z.string().optional().describe('Unique ID that links to the Clients sheet.'),
   invoiceNo: z.string().describe('The invoice or credit note number.'),
   invoiceDate: z.string().describe('Date of the invoice.'),
+  period: z.string().describe('The billing period (e.g., "Jan 2024", "Q1 2024").'),
   purpose: z.string().describe('Reason (e.g., Gratuity, Leave).'),
-  amountExclGST: z.number().describe('Net invoice value before tax.'),
+  amountExclGST: z.number().describe('Net invoice value before tax for this specific entry.'),
   gstPercentage: z.number().optional().describe('GST percentage applied (default 18%).'),
-  totalInclGST: z.number().describe('Auto-calculated invoice value with tax.'),
+  totalInclGST: z.number().describe('Auto-calculated invoice value with tax for this specific entry.'),
   status: z.string().describe('Payment status (e.g., Paid, Unpaid, Partially Paid).'),
   link: z.string().optional().describe('Direct link to the invoice file (e.g., Google Drive link).'),
 });
@@ -53,19 +54,20 @@ const prompt = ai.definePrompt({
 
 If it is an invoice, extract the following information from the invoice document provided. The excel columns you will be extracting include the following names: {{{excelColumns}}}.
 
-If the invoice document contains multiple distinct invoice entries, extract each one as a separate item in the response array.
+VERY IMPORTANT: The invoice document may contain multiple distinct entries or line items (e.g., one for 'Gratuity' and one for 'Leave'). You MUST identify each distinct entry and return it as a separate object in the response array. Each object should have its own specific 'purpose' and its corresponding 'amountExclGST' and 'totalInclGST'. Do not sum the amounts into a single entry.
 
 Invoice Document: {{media url=documentDataUri}}
 
-Ensure that all fields are populated accurately. The data you extract should correspond to these columns:
+Ensure that all fields are populated accurately for each entry. The data you extract should correspond to these columns:
 - Client Name: Name of the company/client.
 - Client ID: Unique ID that links to the Clients sheet (if available).
 - Invoice No: The invoice or credit note number.
 - Invoice Date: Date of the invoice.
-- Purpose: Reason for the invoice (e.g., Gratuity, Leave).
-- Amount (excl. GST): Net invoice value before tax. Return a floating point number.
+- Period: The billing period for the service (e.g., "Jan 2024", "Q1 2024").
+- Purpose: The specific reason for this line item (e.g., Gratuity, Leave).
+- Amount (excl. GST): Net invoice value before tax for this specific line item. Return a floating point number.
 - GST % Used: GST percentage applied (e.g., 18 for 18%). The default is 18% if not specified.
-- Total incl. GST: Auto-calculated invoice value with tax. Return a floating point number.
+- Total incl. GST: Auto-calculated invoice value with tax for this specific line item. Return a floating point number.
 - Status: Payment status (e.g., Paid, Unpaid, Partially Paid). Default to Unpaid if not specified.
 - Link: Direct link to the invoice file. If not present, this can be omitted.
 

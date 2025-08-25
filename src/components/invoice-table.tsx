@@ -21,12 +21,12 @@ interface InvoiceTableProps {
 }
 
 const tableHeaders = [
-  'SL No.', 'Client Name', 'Client ID', 'Invoice No', 'Invoice Date', 'Purpose',
+  'SL No.', 'Client Name', 'Client ID', 'Invoice No', 'Invoice Date', 'Period', 'Purpose',
   'Amount (excl. GST)', 'GST % Used', 'Total incl. GST', 'Status', 'Link'
 ];
 
 const dataKeys: (keyof InvoiceEntry | 'slNo' | 'clientId')[] = [
-  'slNo', 'clientName', 'clientId', 'invoiceNo', 'invoiceDate', 'purpose',
+  'slNo', 'clientName', 'clientId', 'invoiceNo', 'invoiceDate', 'period', 'purpose',
   'amountExclGST', 'gstPercentage', 'totalInclGST', 'status', 'link'
 ];
 
@@ -95,12 +95,13 @@ export function InvoiceTable({ data }: InvoiceTableProps) {
           </TableHeader>
           <TableBody>
             {data.map((row, index) => (
-              <TableRow key={row.invoiceNo || index}>
+              <TableRow key={`${row.invoiceNo}-${row.purpose}-${index}`}>
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>{row.clientName || 'N/A'}</TableCell>
                 <TableCell>{row.clientId || 'N/A'}</TableCell>
                 <TableCell className="font-medium">{row.invoiceNo || 'N/A'}</TableCell>
                 <TableCell>{row.invoiceDate || 'N/A'}</TableCell>
+                <TableCell>{row.period || 'N/A'}</TableCell>
                 <TableCell className="max-w-xs truncate">{row.purpose || 'N/A'}</TableCell>
                 <TableCell className="text-right">{formatCurrency(row.amountExclGST)}</TableCell>
                 <TableCell className="text-center">{row.gstPercentage ? `${row.gstPercentage}%` : 'N/A'}</TableCell>

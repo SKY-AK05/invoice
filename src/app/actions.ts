@@ -3,7 +3,7 @@
 
 import { extractInvoiceData, type ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 
-const EXCEL_COLUMNS = "SL No., Client Name, Client ID, Invoice No., Invoice Date, Purpose, Amount (excl. GST), GST % Used, Total incl. GST, Status, Link";
+const EXCEL_COLUMNS = "SL No., Client Name, Client ID, Invoice No., Invoice Date, Period, Purpose, Amount (excl. GST), GST % Used, Total incl. GST, Status, Link";
 
 export async function processInvoice(documentDataUri: string): Promise<{ success: true; data: ExtractInvoiceDataOutput } | { success: false; error: string }> {
   if (!documentDataUri || !documentDataUri.startsWith('data:')) {
