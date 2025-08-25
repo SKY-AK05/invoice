@@ -152,7 +152,7 @@ export default function Home() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <InvoiceTable data={results} />
+                  <InvoiceTable data={results} sourceFiles={extractedFiles.filter(f => f.status === 'completed')} />
                 </CardContent>
               </Card>
             ) : (

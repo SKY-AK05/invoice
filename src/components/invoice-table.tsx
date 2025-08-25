@@ -1,7 +1,10 @@
 
 "use client";
 
+import * as XLSX from 'xlsx';
+import JSZip from 'jszip';
 import type { ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
+import type { ExtractedFile } from './extracted-files-card';
 import {
   Table,
   TableHeader,
@@ -12,12 +15,20 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download } from 'lucide-react';
+import { Download, ChevronDown } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
 
 type InvoiceEntry = Extract<ExtractInvoiceDataOutput, any[]>[number];
 
 interface InvoiceTableProps {
   data: InvoiceEntry[];
+  sourceFiles: ExtractedFile[];
 }
 
 const tableHeaders = [
@@ -30,7 +41,7 @@ const dataKeys: (keyof InvoiceEntry | 'slNo' | 'clientId')[] = [
   'amountExclGST', 'gstPercentage', 'totalInclGST', 'status', 'link', 'fileName'
 ];
 
-export function InvoiceTable({ data }: InvoiceTableProps) {
+export function InvoiceTable({ data, sourceFiles }: InvoiceTableProps) {
   const formatCurrency = (amount: number | undefined) => {
     if (typeof amount !== 'number') return 'N/A';
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
@@ -52,6 +63,19 @@ export function InvoiceTable({ data }: InvoiceTableProps) {
     }
   };
 
+  const triggerDownload = (blob: Blob, filename: string) => {
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   const handleExportCSV = () => {
     const csvRows = [tableHeaders.join(',')];
     data.forEach((row, index) => {
@@ -66,25 +90,80 @@ export function InvoiceTable({ data }: InvoiceTableProps) {
 
     const csvString = csvRows.join('\n');
     const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `invoice_insights_export_${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
+    triggerDownload(blob, `invoice_insights_export_${new Date().toISOString().split('T')[0]}.csv`);
+  };
+
+  const handleExportExcel = () => {
+    const worksheetData = data.map((row, index) => {
+        const newRow: Record<string, any> = { 'SL No.': index + 1 };
+        tableHeaders.slice(1).forEach((header, i) => {
+            newRow[header] = row[dataKeys[i+1] as keyof InvoiceEntry];
+        });
+        return newRow;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Invoices");
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
+    triggerDownload(blob, `invoice_insights_export_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+  
+  const handleExportZip = async () => {
+    const zip = new JSZip();
+
+    // 1. Add Excel file
+    const worksheetData = data.map((row, index) => {
+        const newRow: Record<string, any> = { 'SL No.': index + 1 };
+        tableHeaders.slice(1).forEach((header, i) => {
+            newRow[header] = row[dataKeys[i+1] as keyof InvoiceEntry];
+        });
+        return newRow;
+    });
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Invoices");
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    zip.file('invoice_data.xlsx', excelBuffer);
+
+    // 2. Add source files
+    sourceFiles.forEach(file => {
+        // Extract base64 content from data URI
+        const base64String = file.dataUri.split(',')[1];
+        if (base64String) {
+            zip.file(file.name, base64String, { base64: true });
+        }
+    });
+    
+    // 3. Generate and download ZIP
+    const zipBlob = await zip.generateAsync({ type: "blob" });
+    triggerDownload(zipBlob, `invoice_insights_archive_${new Date().toISOString().split('T')[0]}.zip`);
   };
 
   return (
     <div className="w-full space-y-4">
       <div className="flex justify-end">
-        <Button onClick={handleExportCSV}>
-          <Download className="mr-2 h-4 w-4" />
-          Download CSV
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button>
+              <Download className="mr-2 h-4 w-4" />
+              Download
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onSelect={handleExportCSV}>
+              Download CSV
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleExportExcel}>
+              Download Excel (.xlsx)
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleExportZip}>
+              Download as ZIP
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <div className="rounded-lg border">
         <Table>
