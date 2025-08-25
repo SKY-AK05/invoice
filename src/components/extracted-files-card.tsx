@@ -4,7 +4,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { FileText, Loader2, CheckCircle2, XCircle, AlertCircle, Play } from 'lucide-react';
+import { FileText, Loader2, CheckCircle2, XCircle, AlertCircle, Play, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface ExtractedFile {
@@ -21,7 +21,7 @@ interface ExtractedFilesCardProps {
 }
 
 const statusText = {
-    idle: "Ready to process",
+    idle: "In queue...",
     processing: "Processing...",
     completed: "Done",
     error: "Failed",
@@ -33,15 +33,17 @@ export function ExtractedFilesCard({ files, onProcessFile, onClear }: ExtractedF
   const getStatusIcon = (file: ExtractedFile) => {
     switch (file.status) {
         case 'idle':
-            return <Play className="h-5 w-5 text-primary" />;
+            return <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />;
         case 'processing':
             return <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />;
         case 'completed':
             return <CheckCircle2 className="h-5 w-5 text-green-500" />;
         case 'error':
-             return <AlertCircle className="h-5 w-5 text-destructive" />;
+             return <RefreshCw className="h-5 w-5 text-destructive" />;
     }
   }
+
+  const isClickable = (file: ExtractedFile) => file.status === 'error';
   
   return (
     <Card>
@@ -49,7 +51,7 @@ export function ExtractedFilesCard({ files, onProcessFile, onClear }: ExtractedF
         <div>
             <CardTitle>Extracted Files</CardTitle>
             <CardDescription>
-                Process individual files from your upload.
+                Files are processed automatically. Click a failed item to retry.
             </CardDescription>
         </div>
          <Button variant="ghost" size="icon" onClick={onClear} aria-label="Clear extracted files">
@@ -64,15 +66,15 @@ export function ExtractedFilesCard({ files, onProcessFile, onClear }: ExtractedF
                 key={file.id} 
                 className={cn(
                   "flex items-center p-2 rounded-md border transition-colors",
-                  file.status === 'idle' && "cursor-pointer hover:bg-accent hover:border-primary",
+                  isClickable(file) && "cursor-pointer hover:bg-accent hover:border-primary",
                   file.status === 'completed' && "bg-green-50 border-green-200",
                   file.status === 'error' && "bg-red-50 border-red-200"
                 )}
-                onClick={() => file.status === 'idle' && onProcessFile(file)}
-                role={file.status === 'idle' ? 'button' : undefined}
-                tabIndex={file.status === 'idle' ? 0 : -1}
+                onClick={() => isClickable(file) && onProcessFile(file)}
+                role={isClickable(file) ? 'button' : undefined}
+                tabIndex={isClickable(file) ? 0 : -1}
                 onKeyDown={(e) => {
-                  if ((e.key === 'Enter' || e.key === ' ') && file.status === 'idle') {
+                  if ((e.key === 'Enter' || e.key === ' ') && isClickable(file)) {
                     e.preventDefault();
                     onProcessFile(file);
                   }

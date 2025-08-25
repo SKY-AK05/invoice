@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 import { processInvoice } from '@/app/actions';
 import { useToast } from "@/hooks/use-toast";
@@ -20,12 +20,17 @@ export default function Home() {
   const [extractedFiles, setExtractedFiles] = useState<ExtractedFile[]>([]);
   const [results, setResults] = useState<InvoiceEntry[]>([]);
   const { toast } = useToast();
+  const [isProcessingQueue, setIsProcessingQueue] = useState(false);
+
+  // Use a ref to ensure the processing function has the latest state
+  const filesRef = useRef(extractedFiles);
+  filesRef.current = extractedFiles;
 
   const handleFilesExtract = (files: ExtractedFile[]) => {
     setExtractedFiles(prevFiles => [...prevFiles, ...files]);
   };
   
-  const handleProcessFile = async (file: ExtractedFile) => {
+  const processFile = async (file: ExtractedFile) => {
     // Set status of this specific file to processing
     setExtractedFiles(prevFiles => prevFiles.map(f => 
       f.id === file.id ? { ...f, status: 'processing' } : f
@@ -53,10 +58,40 @@ export default function Home() {
       });
     }
   };
+  
+  // Effect to automatically process files
+  useEffect(() => {
+    const processQueue = async () => {
+      // Find the first file that is ready to be processed
+      const fileToProcess = filesRef.current.find(f => f.status === 'idle');
+      
+      if (fileToProcess) {
+        setIsProcessingQueue(true);
+        await processFile(fileToProcess);
+        // After processing, recursively call the queue to process the next file
+        processQueue(); 
+      } else {
+        setIsProcessingQueue(false);
+      }
+    };
+    
+    // Only start the queue if it's not already running and there are idle files
+    if (!isProcessingQueue && extractedFiles.some(f => f.status === 'idle')) {
+      processQueue();
+    }
+  }, [extractedFiles, isProcessingQueue]);
+
 
   const handleClearAll = () => {
     setResults([]);
     setExtractedFiles([]);
+  }
+
+  const handleManualProcess = (file: ExtractedFile) => {
+     if (file.status === 'idle' || file.status === 'error') {
+       // Reset status to idle to allow re-processing
+       setExtractedFiles(prev => prev.map(f => f.id === file.id ? {...f, status: 'idle'} : f));
+     }
   }
 
   return (
@@ -97,7 +132,7 @@ export default function Home() {
             {extractedFiles.length > 0 && (
               <ExtractedFilesCard 
                 files={extractedFiles} 
-                onProcessFile={handleProcessFile} 
+                onProcessFile={handleManualProcess} 
                 onClear={() => setExtractedFiles([])}
               />
             )}
