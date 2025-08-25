@@ -21,7 +21,8 @@ const ExtractInvoiceDataInputSchema = z.object({
     .string()
     .describe(
       'The names of the excel columns that will be used to summarize or extract content with. e.g. Client Name, Invoice No, Invoice Date, Amount (excl. GST)'
-    )
+    ),
+  fileName: z.string().describe('The name of the file being processed.'),
 });
 export type ExtractInvoiceDataInput = z.infer<typeof ExtractInvoiceDataInputSchema>;
 
@@ -37,6 +38,7 @@ const InvoiceEntrySchema = z.object({
   totalInclGST: z.number().describe('Auto-calculated invoice value with tax for this specific entry.'),
   status: z.string().describe('Payment status (e.g., Paid, Unpaid, Partially Paid).'),
   link: z.string().optional().describe('Direct link to the invoice file (e.g., Google Drive link).'),
+  fileName: z.string().optional().describe('The name of the source document file.'),
 });
 
 const ExtractInvoiceDataOutputSchema = z.array(InvoiceEntrySchema);
@@ -53,6 +55,7 @@ const prompt = ai.definePrompt({
   prompt: `You are an expert data extractor specializing in invoices. First, verify if the document provided is an invoice. If it is not an invoice, return an empty array.
 
 If it is an invoice, extract the following information from the invoice document provided. The excel columns you will be extracting include the following names: {{{excelColumns}}}.
+The name of the file being processed is {{{fileName}}}. Make sure to include this file name in each extracted entry.
 
 VERY IMPORTANT: The invoice document may contain multiple distinct entries or line items (e.g., one for 'Gratuity' and one for 'Leave'). You MUST identify each distinct entry and return it as a separate object in the response array. Each object should have its own specific 'purpose' and its corresponding 'amountExclGST' and 'totalInclGST'. Do not sum the amounts into a single entry.
 
@@ -70,6 +73,7 @@ Ensure that all fields are populated accurately for each entry. The data you ext
 - Total incl. GST: Auto-calculated invoice value with tax for this specific line item. Return a floating point number.
 - Status: Payment status (e.g., Paid, Unpaid, Partially Paid). Default to Unpaid if not specified.
 - Link: Direct link to the invoice file. If not present, this can be omitted.
+- File Name: The name of the source document file.
 
 If a field is not available, indicate with 'N/A' for strings or handle numbers appropriately. Ensure that amountExclGST and totalInclGST are returned as floating point numbers.`,
 });
@@ -82,6 +86,7 @@ const extractInvoiceDataFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    return output!;
+    // Add fileName to each entry if the AI didn't
+    return output!.map(entry => ({...entry, fileName: input.fileName}));
   }
 );

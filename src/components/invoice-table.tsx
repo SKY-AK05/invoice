@@ -22,12 +22,12 @@ interface InvoiceTableProps {
 
 const tableHeaders = [
   'SL No.', 'Client Name', 'Client ID', 'Invoice No', 'Invoice Date', 'Period', 'Purpose',
-  'Amount (excl. GST)', 'GST % Used', 'Total incl. GST', 'Status', 'Link'
+  'Amount (excl. GST)', 'GST % Used', 'Total incl. GST', 'Status', 'Link', 'File Name'
 ];
 
 const dataKeys: (keyof InvoiceEntry | 'slNo' | 'clientId')[] = [
   'slNo', 'clientName', 'clientId', 'invoiceNo', 'invoiceDate', 'period', 'purpose',
-  'amountExclGST', 'gstPercentage', 'totalInclGST', 'status', 'link'
+  'amountExclGST', 'gstPercentage', 'totalInclGST', 'status', 'link', 'fileName'
 ];
 
 export function InvoiceTable({ data }: InvoiceTableProps) {
@@ -110,6 +110,7 @@ export function InvoiceTable({ data }: InvoiceTableProps) {
                 <TableCell>
                   {row.link ? <a href={row.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">View</a> : 'N/A'}
                 </TableCell>
+                <TableCell className="max-w-[150px] truncate">{row.fileName || 'N/A'}</TableCell>
               </TableRow>
             ))}
           </TableBody>

@@ -36,7 +36,7 @@ export default function Home() {
       f.id === file.id ? { ...f, status: 'processing' } : f
     ));
     
-    const response = await processInvoice(file.dataUri);
+    const response = await processInvoice(file.dataUri, file.name);
 
     if (response.success && response.data.length > 0) {
       setResults(prevResults => [...prevResults, ...response.data]);
