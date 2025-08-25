@@ -49,7 +49,9 @@ const prompt = ai.definePrompt({
   name: 'extractInvoiceDataPrompt',
   input: {schema: ExtractInvoiceDataInputSchema},
   output: {schema: ExtractInvoiceDataOutputSchema},
-  prompt: `You are an expert data extractor specializing in invoices. Extract the following information from the invoice document provided. The excel columns you will be extracting include the following names: {{{excelColumns}}}.
+  prompt: `You are an expert data extractor specializing in invoices. First, verify if the document provided is an invoice. If it is not an invoice, return an empty array.
+
+If it is an invoice, extract the following information from the invoice document provided. The excel columns you will be extracting include the following names: {{{excelColumns}}}.
 
 If the invoice document contains multiple distinct invoice entries, extract each one as a separate item in the response array.
 
