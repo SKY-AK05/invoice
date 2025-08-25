@@ -21,6 +21,8 @@ declare global {
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY || '';
 const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 const SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
+const APP_ID = process.env.NEXT_PUBLIC_GOOGLE_APP_ID || '';
+
 
 export function DrivePicker({ onFileSelect, isProcessing }: DrivePickerProps) {
   const [gapiLoaded, setGapiLoaded] = useState(false);
@@ -59,6 +61,10 @@ export function DrivePicker({ onFileSelect, isProcessing }: DrivePickerProps) {
   
   useEffect(() => {
     if (gisLoaded) {
+       if (!CLIENT_ID) {
+        console.error("Google Client ID is missing. Please set NEXT_PUBLIC_GOOGLE_CLIENT_ID in your .env file.");
+        return;
+      }
       const client = window.google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
         scope: SCOPES,
@@ -74,6 +80,14 @@ export function DrivePicker({ onFileSelect, isProcessing }: DrivePickerProps) {
 
 
   const handleAuthClick = () => {
+     if (!CLIENT_ID || !API_KEY || !APP_ID) {
+        toast({
+            variant: "destructive",
+            title: "Google Drive Not Configured",
+            description: "Google API credentials are not set up. Please add them to your .env file.",
+        });
+        return;
+    }
     if (tokenClient) {
       tokenClient.requestAccessToken({ prompt: 'consent' });
     }
@@ -83,7 +97,8 @@ export function DrivePicker({ onFileSelect, isProcessing }: DrivePickerProps) {
     const view = new window.google.picker.View(window.google.picker.ViewId.DOCS);
     view.setMimeTypes("application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document");
     const picker = new window.google.picker.PickerBuilder()
-      .setAppId(process.env.NEXT_PUBLIC_GOOGLE_APP_ID || '')
+      .setAppId(APP_ID)
+      .setApiKey(API_KEY)
       .setOAuthToken(accessToken)
       .addView(view)
       .setCallback((data: any) => {
@@ -128,7 +143,7 @@ export function DrivePicker({ onFileSelect, isProcessing }: DrivePickerProps) {
     reader.readAsDataURL(blob);
   };
 
-  const isReady = gapiLoaded && gisLoaded && tokenClient;
+  const isReady = gapiLoaded && gisLoaded && !!CLIENT_ID;
 
   return (
     <Button
