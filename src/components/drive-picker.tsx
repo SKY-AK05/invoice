@@ -62,7 +62,6 @@ export function DrivePicker({ onFileSelect, isProcessing }: DrivePickerProps) {
   useEffect(() => {
     if (gisLoaded) {
        if (!CLIENT_ID) {
-        console.error("Google Client ID is missing. Please set NEXT_PUBLIC_GOOGLE_CLIENT_ID in your .env file.");
         return;
       }
       const client = window.google.accounts.oauth2.initTokenClient({
