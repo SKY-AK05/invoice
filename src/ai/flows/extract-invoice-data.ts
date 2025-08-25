@@ -15,7 +15,7 @@ const ExtractInvoiceDataInputSchema = z.object({
   documentDataUri: z
     .string()
     .describe(
-      "The invoice document (Word or PDF) as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+      "The invoice document (Word or PDF) as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'"
     ),
   excelColumns: z
     .string()
@@ -26,16 +26,16 @@ const ExtractInvoiceDataInputSchema = z.object({
 export type ExtractInvoiceDataInput = z.infer<typeof ExtractInvoiceDataInputSchema>;
 
 const ExtractInvoiceDataOutputSchema = z.object({
-  clientName: z.string().describe('The name of the client.'),
-  clientId: z.string().optional().describe('The ID of the client, if available.'),
-  invoiceNo: z.string().describe('The invoice number.'),
-  invoiceDate: z.string().describe('The invoice date.'),
-  purpose: z.string().describe('The purpose of the invoice.'),
-  amountExclGST: z.number().describe('The amount excluding GST.'),
-  gstPercentage: z.number().optional().describe('The GST percentage used, if applicable.'),
-  totalInclGST: z.number().describe('The total amount including GST.'),
-  status: z.string().describe('The status of the invoice (e.g., paid, unpaid).'),
-  link: z.string().optional().describe('A link to the invoice document, if available.'),
+  clientName: z.string().describe('The name of the company/client.'),
+  clientId: z.string().optional().describe('Unique ID that links to the Clients sheet.'),
+  invoiceNo: z.string().describe('The invoice or credit note number.'),
+  invoiceDate: z.string().describe('Date of the invoice.'),
+  purpose: z.string().describe('Reason (e.g., Gratuity, Leave).'),
+  amountExclGST: z.number().describe('Net invoice value before tax.'),
+  gstPercentage: z.number().optional().describe('GST percentage applied (default 18%).'),
+  totalInclGST: z.number().describe('Auto-calculated invoice value with tax.'),
+  status: z.string().describe('Payment status (e.g., Paid, Unpaid, Partially Paid).'),
+  link: z.string().optional().describe('Direct link to the invoice file (e.g., Google Drive link).'),
 });
 export type ExtractInvoiceDataOutput = z.infer<typeof ExtractInvoiceDataOutputSchema>;
 
@@ -47,7 +47,7 @@ const prompt = ai.definePrompt({
   name: 'extractInvoiceDataPrompt',
   input: {schema: ExtractInvoiceDataInputSchema},
   output: {schema: ExtractInvoiceDataOutputSchema},
-  prompt: `You are an expert data extractor specializing in invoices. Extract the following information from the invoice document provided. The excel columns you will be extracting include the following names: {{{excelColumns}}}.\n\nInvoice Document: {{media url=documentDataUri}}\n\nEnsure that all fields are populated accurately. If a field is not available, indicate with 'N/A'.  Ensure that amountExclGST and totalInclGST are returned as floating point numbers, not strings.  Do not return the same value for amountExclGST and totalInclGST.  The excel columns correspond to the following data points:\n- Client Name: The name of the client.\n- Client ID: The ID of the client, if available.\n- Invoice No: The invoice number.\n- Invoice Date: The invoice date.\n- Purpose: The purpose of the invoice.\n- Amount (excl. GST): The amount excluding GST.\n- GST % Used: The GST percentage used, if applicable.\n- Total incl. GST: The total amount including GST.\n- Status: The status of the invoice (e.g., paid, unpaid).\n- Link: A link to the invoice document, if available.`,
+  prompt: `You are an expert data extractor specializing in invoices. Extract the following information from the invoice document provided. The excel columns you will be extracting include the following names: {{{excelColumns}}}.\n\nInvoice Document: {{media url=documentDataUri}}\n\nEnsure that all fields are populated accurately. The data you extract should correspond to these columns:\n- Client Name: Name of the company/client.\n- Client ID: Unique ID that links to the Clients sheet (if available).\n- Invoice No: The invoice or credit note number.\n- Invoice Date: Date of the invoice.\n- Purpose: Reason for the invoice (e.g., Gratuity, Leave).\n- Amount (excl. GST): Net invoice value before tax. Return a floating point number.\n- GST % Used: GST percentage applied (e.g., 18 for 18%). The default is 18% if not specified.\n- Total incl. GST: Auto-calculated invoice value with tax. Return a floating point number.\n- Status: Payment status (e.g., Paid, Unpaid, Partially Paid). Default to Unpaid if not specified.\n- Link: Direct link to the invoice file. If not present, this can be omitted.\n\nIf a field is not available, indicate with 'N/A' for strings or handle numbers appropriately. Ensure that amountExclGST and totalInclGST are returned as floating point numbers.`,
 });
 
 const extractInvoiceDataFlow = ai.defineFlow(

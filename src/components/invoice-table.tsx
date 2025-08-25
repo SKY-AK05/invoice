@@ -19,12 +19,12 @@ interface InvoiceTableProps {
 }
 
 const tableHeaders = [
-  'SL No.', 'Client Name', 'Invoice No', 'Invoice Date', 'Purpose',
+  'SL No.', 'Client Name', 'Client ID', 'Invoice No', 'Invoice Date', 'Purpose',
   'Amount (excl. GST)', 'GST % Used', 'Total incl. GST', 'Status', 'Link'
 ];
 
-const dataKeys: (keyof ExtractInvoiceDataOutput | 'slNo')[] = [
-  'slNo', 'clientName', 'invoiceNo', 'invoiceDate', 'purpose',
+const dataKeys: (keyof ExtractInvoiceDataOutput | 'slNo' | 'clientId')[] = [
+  'slNo', 'clientName', 'clientId', 'invoiceNo', 'invoiceDate', 'purpose',
   'amountExclGST', 'gstPercentage', 'totalInclGST', 'status', 'link'
 ];
 
@@ -43,6 +43,8 @@ export function InvoiceTable({ data }: InvoiceTableProps) {
       case 'unpaid':
       case 'pending':
         return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Unpaid</Badge>;
+      case 'partially paid':
+        return <Badge variant="secondary" className="bg-blue-100 text-blue-800">Partially Paid</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -94,6 +96,7 @@ export function InvoiceTable({ data }: InvoiceTableProps) {
               <TableRow key={row.invoiceNo || index}>
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>{row.clientName || 'N/A'}</TableCell>
+                <TableCell>{row.clientId || 'N/A'}</TableCell>
                 <TableCell className="font-medium">{row.invoiceNo || 'N/A'}</TableCell>
                 <TableCell>{row.invoiceDate || 'N/A'}</TableCell>
                 <TableCell className="max-w-xs truncate">{row.purpose || 'N/A'}</TableCell>
