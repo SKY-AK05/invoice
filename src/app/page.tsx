@@ -26,11 +26,11 @@ export default function Home() {
     const response = await processInvoice(fileDataUri);
 
     if (response.success) {
-      setResults(response.data);
+      setResults(prevResults => [...prevResults, ...response.data]);
       setStatus('completed');
       toast({
         title: "Extraction Complete",
-        description: `Successfully extracted ${response.data.length} invoice entr${response.data.length > 1 ? 'ies' : 'y'}.`,
+        description: `Successfully extracted and appended ${response.data.length} new invoice entr${response.data.length > 1 ? 'ies' : 'y'}.`,
       });
     } else {
       setStatus('error');
@@ -39,9 +39,9 @@ export default function Home() {
         title: "Extraction Failed",
         description: response.error,
       });
-      // Reset to idle after an error to allow retries
-      setTimeout(() => setStatus('idle'), 500); 
     }
+    // Reset to idle after processing to allow next upload
+    setTimeout(() => setStatus('idle'), 500);
   };
   
   const handleClearResults = () => {
@@ -78,7 +78,7 @@ export default function Home() {
             </CardContent>
           </Card>
           
-          {(status === 'completed' || results.length > 0) && (
+          {(results.length > 0) && (
              <Card>
               <CardHeader className="flex flex-row items-start justify-between">
                 <div>
