@@ -12,10 +12,11 @@ import { InvoiceTable } from '@/components/invoice-table';
 import { Logo } from '@/components/icons';
 
 type ProcessingStatus = 'idle' | 'processing' | 'completed' | 'error';
+type InvoiceEntry = Extract<ExtractInvoiceDataOutput, any[]>[number];
 
 export default function Home() {
   const [status, setStatus] = useState<ProcessingStatus>('idle');
-  const [results, setResults] = useState<ExtractInvoiceDataOutput[]>([]);
+  const [results, setResults] = useState<InvoiceEntry[]>([]);
   const { toast } = useToast();
 
   const handleFileUpload = async (fileDataUri: string) => {
@@ -23,11 +24,11 @@ export default function Home() {
     const response = await processInvoice(fileDataUri);
 
     if (response.success) {
-      setResults(prevResults => [...prevResults, response.data]);
+      setResults(prevResults => [...prevResults, ...response.data]);
       setStatus('completed');
       toast({
         title: "Extraction Complete",
-        description: "Invoice data has been successfully extracted.",
+        description: `Successfully extracted ${response.data.length} invoice entr${response.data.length > 1 ? 'ies' : 'y'}.`,
       });
     } else {
       setStatus('error');

@@ -14,8 +14,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Download } from 'lucide-react';
 
+type InvoiceEntry = Extract<ExtractInvoiceDataOutput, any[]>[number];
+
 interface InvoiceTableProps {
-  data: ExtractInvoiceDataOutput[];
+  data: InvoiceEntry[];
 }
 
 const tableHeaders = [
@@ -23,7 +25,7 @@ const tableHeaders = [
   'Amount (excl. GST)', 'GST % Used', 'Total incl. GST', 'Status', 'Link'
 ];
 
-const dataKeys: (keyof ExtractInvoiceDataOutput | 'slNo' | 'clientId')[] = [
+const dataKeys: (keyof InvoiceEntry | 'slNo' | 'clientId')[] = [
   'slNo', 'clientName', 'clientId', 'invoiceNo', 'invoiceDate', 'purpose',
   'amountExclGST', 'gstPercentage', 'totalInclGST', 'status', 'link'
 ];
@@ -55,7 +57,7 @@ export function InvoiceTable({ data }: InvoiceTableProps) {
     data.forEach((row, index) => {
       const values = dataKeys.map(key => {
         if (key === 'slNo') return (index + 1).toString();
-        const value = row[key as keyof ExtractInvoiceDataOutput];
+        const value = row[key as keyof InvoiceEntry];
         const stringValue = typeof value === 'undefined' || value === null ? '' : String(value);
         return `"${stringValue.replace(/"/g, '""')}"`;
       });
