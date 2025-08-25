@@ -2,64 +2,112 @@
 "use client";
 
 import { useState, useCallback, type DragEvent } from 'react';
+import JSZip from 'jszip';
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { UploadCloud, File as FileIcon, Loader2 } from 'lucide-react';
+import { UploadCloud, Loader2 } from 'lucide-react';
 import { DrivePicker } from './drive-picker';
 import { Separator } from './ui/separator';
+import type { ExtractedFile } from './extracted-files-card';
 
 interface InvoiceUploaderProps {
-  onFileUpload: (fileDataUri: string) => void;
-  isProcessing: boolean;
+  onFilesExtract: (files: ExtractedFile[]) => void;
 }
 
 const acceptedFileTypes = [
   'application/pdf',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/zip',
 ];
 
-export function InvoiceUploader({ onFileUpload, isProcessing }: InvoiceUploaderProps) {
+export function InvoiceUploader({ onFilesExtract }: InvoiceUploaderProps) {
   const [isDragging, setIsDragging] = useState(false);
-  const [fileName, setFileName] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [statusText, setStatusText] = useState("Click to upload or drag and drop");
   const { toast } = useToast();
 
-  const handleFile = useCallback((file: File) => {
+  const handleFile = useCallback(async (file: File) => {
     if (!acceptedFileTypes.includes(file.type)) {
       toast({
         variant: "destructive",
         title: "Invalid File Type",
-        description: "Please upload a PDF or Word document.",
+        description: "Please upload a PDF, Word, or ZIP document.",
       });
       return;
     }
 
-    setFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUri = e.target?.result as string;
-      onFileUpload(dataUri);
-    };
-    reader.onerror = () => {
-      toast({
-        variant: "destructive",
-        title: "File Read Error",
-        description: "Could not read the selected file.",
-      });
-       setFileName(null);
-    };
-    reader.readAsDataURL(file);
-  }, [onFileUpload, toast]);
+    setIsProcessing(true);
+    setStatusText(`Processing ${file.name}...`);
+    
+    if (file.type === 'application/zip') {
+      try {
+        const zip = await JSZip.loadAsync(file);
+        const extractedFiles: ExtractedFile[] = [];
+        const filePromises = Object.keys(zip.files).map(async (filename) => {
+          const zipEntry = zip.files[filename];
+          if (!zipEntry.dir) {
+            const blob = await zipEntry.async('blob');
+            const dataUri = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = (e) => resolve(e.target?.result as string);
+              reader.onerror = (err) => reject(err);
+              reader.readAsDataURL(blob);
+            });
+            extractedFiles.push({
+              id: self.crypto.randomUUID(),
+              name: filename,
+              dataUri: dataUri,
+              status: 'idle',
+            });
+          }
+        });
+        await Promise.all(filePromises);
+        onFilesExtract(extractedFiles);
+        toast({
+          title: "ZIP Extracted",
+          description: `Extracted ${extractedFiles.length} files. Ready for processing.`,
+        });
+      } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "ZIP Read Error",
+            description: "Could not read the ZIP file. It may be corrupt.",
+        });
+      }
+    } else {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const dataUri = e.target?.result as string;
+          onFilesExtract([{ id: self.crypto.randomUUID(), name: file.name, dataUri, status: 'idle' }]);
+        };
+        reader.onerror = () => {
+          toast({
+              variant: "destructive",
+              title: "File Read Error",
+              description: "Could not read the selected file.",
+          });
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    setIsProcessing(false);
+    setStatusText("Click to upload or drag and drop");
 
-  const handleDriveFileSelect = (dataUri: string, driveFileName: string) => {
-    setFileName(driveFileName);
-    onFileUpload(dataUri);
+  }, [onFilesExtract, toast]);
+
+  const handleDriveFileSelect = async (dataUri: string, driveFileName: string) => {
+    setIsProcessing(true);
+    setStatusText(`Processing ${driveFileName}...`);
+    onFilesExtract([{ id: self.crypto.randomUUID(), name: driveFileName, dataUri, status: 'idle' }]);
+    setIsProcessing(false);
+    setStatusText("Click to upload or drag and drop");
   }
 
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragging(true);
+    if (!isProcessing) setIsDragging(true);
   };
 
   const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
@@ -77,6 +125,7 @@ export function InvoiceUploader({ onFileUpload, isProcessing }: InvoiceUploaderP
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
+    if (isProcessing) return;
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleFile(e.dataTransfer.files[0]);
       e.dataTransfer.clearData();
@@ -88,7 +137,8 @@ export function InvoiceUploader({ onFileUpload, isProcessing }: InvoiceUploaderP
       <label
         htmlFor="file-upload"
         className={cn(
-          "relative block w-full rounded-lg border-2 border-dashed border-border p-8 text-center cursor-pointer transition-colors duration-200 ease-in-out hover:border-primary",
+          "relative block w-full rounded-lg border-2 border-dashed border-border p-8 text-center transition-colors duration-200 ease-in-out",
+          !isProcessing && "cursor-pointer hover:border-primary",
           isDragging && "border-primary bg-accent"
         )}
         onDragEnter={handleDragEnter}
@@ -106,10 +156,10 @@ export function InvoiceUploader({ onFileUpload, isProcessing }: InvoiceUploaderP
           </div>
           <div className="space-y-1">
             <p className="font-medium text-foreground">
-              {isProcessing ? "Processing your invoice..." : "Click to upload or drag and drop"}
+              {statusText}
             </p>
             <p className="text-sm text-muted-foreground">
-              {isProcessing ? fileName : "PDF or Word document"}
+              PDF, Word or ZIP document
             </p>
           </div>
         </div>

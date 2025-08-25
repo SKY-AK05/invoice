@@ -10,46 +10,54 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { InvoiceUploader } from '@/components/invoice-uploader';
 import { InvoiceTable } from '@/components/invoice-table';
+import { ExtractedFilesCard, type ExtractedFile } from '@/components/extracted-files-card';
 import { Logo } from '@/components/icons';
 import { XCircle } from 'lucide-react';
 
-type ProcessingStatus = 'idle' | 'processing' | 'completed' | 'error';
 type InvoiceEntry = Extract<ExtractInvoiceDataOutput, any[]>[number];
 
 export default function Home() {
-  const [status, setStatus] = useState<ProcessingStatus>('idle');
+  const [extractedFiles, setExtractedFiles] = useState<ExtractedFile[]>([]);
   const [results, setResults] = useState<InvoiceEntry[]>([]);
   const { toast } = useToast();
 
-  const handleFileUpload = async (fileDataUri: string) => {
-    setStatus('processing');
-    const response = await processInvoice(fileDataUri);
+  const handleFilesExtract = (files: ExtractedFile[]) => {
+    setExtractedFiles(prevFiles => [...prevFiles, ...files]);
+  };
+  
+  const handleProcessFile = async (file: ExtractedFile) => {
+    // Set status of this specific file to processing
+    setExtractedFiles(prevFiles => prevFiles.map(f => 
+      f.id === file.id ? { ...f, status: 'processing' } : f
+    ));
+    
+    const response = await processInvoice(file.dataUri);
 
     if (response.success) {
       setResults(prevResults => [...prevResults, ...response.data]);
-      setStatus('completed');
+      setExtractedFiles(prevFiles => prevFiles.map(f => 
+        f.id === file.id ? { ...f, status: 'completed' } : f
+      ));
       toast({
         title: "Extraction Complete",
-        description: `Successfully extracted and appended ${response.data.length} new invoice entr${response.data.length > 1 ? 'ies' : 'y'}.`,
+        description: `Successfully extracted data from ${file.name}.`,
       });
     } else {
-      setStatus('error');
+      setExtractedFiles(prevFiles => prevFiles.map(f => 
+        f.id === file.id ? { ...f, status: 'error' } : f
+      ));
       toast({
         variant: "destructive",
         title: "Extraction Failed",
         description: response.error,
       });
     }
-    // Reset to idle after processing to allow next upload
-    setTimeout(() => setStatus('idle'), 500);
   };
-  
-  const handleClearResults = () => {
-    setResults([]);
-    setStatus('idle');
-  }
 
-  const isProcessing = status === 'processing';
+  const handleClearAll = () => {
+    setResults([]);
+    setExtractedFiles([]);
+  }
 
   return (
     <div className="min-h-screen w-full font-body">
@@ -61,45 +69,61 @@ export default function Home() {
               Invoice Insights
             </h1>
           </div>
+          {(extractedFiles.length > 0 || results.length > 0) && (
+             <Button variant="ghost" size="sm" onClick={handleClearAll}>
+                <XCircle className="h-4 w-4 mr-2" />
+                Clear All
+            </Button>
+          )}
         </div>
       </header>
 
       <main className="container mx-auto py-8 px-4 md:px-6">
-        <div className="max-w-4xl mx-auto space-y-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Upload Your Invoice</CardTitle>
-              <CardDescription>
-                Drop a Word or PDF file below. Our AI will automatically extract the details.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <InvoiceUploader onFileUpload={handleFileUpload} isProcessing={isProcessing} />
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           
-          {(results.length > 0) && (
-             <Card>
-              <CardHeader className="flex flex-row items-start justify-between">
-                <div>
-                  <CardTitle>Extracted Data</CardTitle>
-                  <CardDescription>
-                    Review the extracted invoice details below and export to CSV.
-                  </CardDescription>
-                </div>
-                <Button variant="ghost" size="icon" onClick={handleClearResults} aria-label="Clear results">
-                  <XCircle className="h-5 w-5 text-muted-foreground" />
-                </Button>
+          <div className="space-y-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-2xl">Upload Invoices</CardTitle>
+                <CardDescription>
+                  Drop a Word, PDF, or ZIP file below. Our AI will automatically extract the details.
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <InvoiceTable data={results} />
+                <InvoiceUploader onFilesExtract={handleFilesExtract} />
               </CardContent>
             </Card>
-          )}
+
+            {extractedFiles.length > 0 && (
+              <ExtractedFilesCard 
+                files={extractedFiles} 
+                onProcessFile={handleProcessFile} 
+                onClear={() => setExtractedFiles([])}
+              />
+            )}
+          </div>
+          
+          <div className="lg:col-span-1">
+            {results.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <div>
+                    <CardTitle>Extracted Data</CardTitle>
+                    <CardDescription>
+                      Review the extracted invoice details below.
+                    </CardDescription>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <InvoiceTable data={results} />
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
       </main>
 
-      <footer className="border-t py-6">
+      <footer className="border-t py-6 mt-8">
         <div className="container mx-auto text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} Invoice Insights. All rights reserved.</p>
         </div>
