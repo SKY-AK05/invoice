@@ -64,7 +64,9 @@ export function ExtractedFilesCard({ files, onProcessFile, onClear }: ExtractedF
                 key={file.id} 
                 className={cn(
                   "flex items-center p-2 rounded-md border transition-colors",
-                  file.status === 'idle' && "cursor-pointer hover:bg-accent hover:border-primary"
+                  file.status === 'idle' && "cursor-pointer hover:bg-accent hover:border-primary",
+                  file.status === 'completed' && "bg-green-50 border-green-200",
+                  file.status === 'error' && "bg-red-50 border-red-200"
                 )}
                 onClick={() => file.status === 'idle' && onProcessFile(file)}
                 role={file.status === 'idle' ? 'button' : undefined}
@@ -79,7 +81,13 @@ export function ExtractedFilesCard({ files, onProcessFile, onClear }: ExtractedF
                 <FileText className="h-6 w-6 mr-3 text-muted-foreground" />
                 <div className="flex-1 truncate">
                   <p className="text-sm font-medium truncate">{file.name}</p>
-                  <p className="text-xs text-muted-foreground">{statusText[file.status]}</p>
+                  <p className={cn(
+                      "text-xs",
+                      file.status === 'completed' ? "text-green-600" : "text-muted-foreground",
+                      file.status === 'error' ? "text-red-600" : "text-muted-foreground",
+                  )}>
+                      {statusText[file.status]}
+                  </p>
                 </div>
                 <div className="flex items-center justify-center w-10 h-10">
                   {getStatusIcon(file)}
