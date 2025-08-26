@@ -58,35 +58,35 @@ body {
   }
  
   .dark {
-    --background: 40 6% 12%; /* #22211f - Dark Black */
-    --foreground: 60 30% 96%; /* #f5f5dc - Cream White */
+    --background: 171 43% 3%; /* #060D0C - Luxe Noir */
+    --foreground: 46 47% 92%; /* #F0EDE5 - Soft Oat */
  
-    --card: 40 6% 15%; /* A slightly lighter shade for cards */
-    --card-foreground: 60 30% 96%;
+    --card: 171 43% 5%; /* Slightly lighter than background */
+    --card-foreground: 46 47% 92%;
  
-    --popover: 40 6% 12%;
-    --popover-foreground: 60 30% 96%;
+    --popover: 171 43% 3%;
+    --popover-foreground: 46 47% 92%;
  
-    /* Primary: A creamier, less saturated accent */
-    --primary: 45 40% 80%; 
-    --primary-foreground: 40 10% 15%;
+    /* Primary: Soft Oat */
+    --primary: 46 47% 92%; 
+    --primary-foreground: 171 43% 10%; /* Dark text on primary */
  
-    --secondary: 40 6% 20%;
-    --secondary-foreground: 60 30% 96%;
+    --secondary: 171 43% 8%;
+    --secondary-foreground: 46 47% 92%;
  
-    --muted: 40 6% 20%;
-    --muted-foreground: 60 30% 80%;
+    --muted: 171 43% 8%;
+    --muted-foreground: 46 47% 85%;
  
-    /* Accent: A slightly brighter cream for hover states */
-    --accent: 40 6% 22%;
-    --accent-foreground: 60 30% 98%;
+    /* Accent: A slightly brighter Soft Oat for hover states */
+    --accent: 171 43% 10%;
+    --accent-foreground: 46 47% 98%;
  
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
  
-    --border: 40 6% 25%;
-    --input: 40 6% 20%;
-    --ring: 45 40% 80%;
+    --border: 171 43% 12%;
+    --input: 171 43% 8%;
+    --ring: 46 47% 92%;
 
     --sidebar-background: 222.2 84% 4.9%;
     --sidebar-foreground: 210 40% 98%;
