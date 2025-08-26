@@ -58,35 +58,35 @@ body {
   }
  
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 60 4% 11%; /* #1D1D1B */
+    --foreground: 0 0% 100%; /* #FFFFFF */
  
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 60 4% 14%; /* A slightly lighter shade for cards */
+    --card-foreground: 0 0% 100%;
  
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 60 4% 11%;
+    --popover-foreground: 0 0% 100%;
  
-    /* Primary: Soft Blue (#A0D2EB) */
-    --primary: 200 69% 90%; 
-    --primary-foreground: 200 50% 25%;
+    /* Primary: Deep Blue */
+    --primary: 240 100% 10%; /* #000033 */
+    --primary-foreground: 0 0% 100%;
  
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 240 100% 15%;
+    --secondary-foreground: 0 0% 100%;
  
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 240 100% 15%;
+    --muted-foreground: 0 0% 70%;
  
-    /* Accent: Darker Blue (#7CB9D8) */
-    --accent: 200 60% 85%;
-    --accent-foreground: 200 50% 20%;
+    /* Accent: A slightly lighter blue for hover states */
+    --accent: 240 100% 18%;
+    --accent-foreground: 0 0% 100%;
  
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
  
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 200 69% 90%;
+    --border: 240 100% 20%;
+    --input: 240 100% 15%;
+    --ring: 240 100% 30%;
 
     --sidebar-background: 222.2 84% 4.9%;
     --sidebar-foreground: 210 40% 98%;
