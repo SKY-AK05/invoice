@@ -58,35 +58,35 @@ body {
   }
  
   .dark {
-    --background: 171 43% 3%; /* #060D0C - Luxe Noir */
-    --foreground: 46 47% 92%; /* #F0EDE5 - Soft Oat */
- 
-    --card: 171 43% 5%; /* Slightly lighter than background */
-    --card-foreground: 46 47% 92%;
- 
-    --popover: 171 43% 3%;
-    --popover-foreground: 46 47% 92%;
- 
-    /* Primary: Soft Oat */
-    --primary: 46 47% 92%; 
-    --primary-foreground: 171 43% 10%; /* Dark text on primary */
- 
-    --secondary: 171 43% 8%;
-    --secondary-foreground: 46 47% 92%;
- 
-    --muted: 171 43% 8%;
-    --muted-foreground: 46 47% 85%;
- 
-    /* Accent: A slightly brighter Soft Oat for hover states */
-    --accent: 171 43% 10%;
-    --accent-foreground: 46 47% 98%;
- 
-    --destructive: 0 62.8% 30.6%;
+    --background: 0 0% 2%; /* #050505 - Near Black */
+    --foreground: 0 0% 95%; /* #F2F2F2 - Soft White */
+
+    --card: 0 0% 4%; /* Slightly lighter than background */
+    --card-foreground: 0 0% 95%;
+
+    --popover: 0 0% 2%;
+    --popover-foreground: 0 0% 95%;
+
+    /* Primary: Soft White */
+    --primary: 0 0% 95%;
+    --primary-foreground: 0 0% 10%;
+
+    --secondary: 0 0% 8%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 0 0% 8%;
+    --muted-foreground: 0 0% 60%;
+
+    /* Accent: A slightly brighter gray for hover states */
+    --accent: 0 0% 12%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
- 
-    --border: 171 43% 12%;
-    --input: 171 43% 8%;
-    --ring: 46 47% 92%;
+
+    --border: 0 0% 15%;
+    --input: 0 0% 8%;
+    --ring: 0 0% 95%;
 
     --sidebar-background: 222.2 84% 4.9%;
     --sidebar-foreground: 210 40% 98%;

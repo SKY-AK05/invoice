@@ -68,12 +68,12 @@ export function InvoiceTable({ data, sourceFiles, onEdit, onDelete }: InvoiceTab
     const lowerStatus = status.toLowerCase();
     switch (lowerStatus) {
       case 'paid':
-        return <Badge variant="secondary" className="bg-green-100 text-green-800">Paid</Badge>;
+        return <Badge variant="outline">Paid</Badge>;
       case 'unpaid':
       case 'pending':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Unpaid</Badge>;
+        return <Badge variant="destructive">Unpaid</Badge>;
       case 'partially paid':
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800">Partially Paid</Badge>;
+        return <Badge variant="secondary">Partially Paid</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
