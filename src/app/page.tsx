@@ -12,7 +12,7 @@ import { InvoiceUploader } from '@/components/invoice-uploader';
 import { InvoiceTable, type InvoiceEntry } from '@/components/invoice-table';
 import { ExtractedFilesCard, type ExtractedFile } from '@/components/extracted-files-card';
 import { Logo } from '@/components/icons';
-import { XCircle } from 'lucide-react';
+import { XCircle, Inbox } from 'lucide-react';
 import { EditInvoiceDialog } from '@/components/edit-invoice-dialog';
 
 
@@ -120,11 +120,11 @@ export default function Home() {
   const hasContent = extractedFiles.length > 0 || results.length > 0;
 
   return (
-    <div className="min-h-screen w-full font-body flex flex-col">
-      <header className="border-b bg-card">
+    <div className="min-h-screen w-full bg-background font-sans flex flex-col">
+      <header className="border-b bg-card/80 backdrop-blur-lg sticky top-0 z-10">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
           <div className="flex items-center gap-3">
-            <Logo className="h-7 w-7 text-primary" />
+            <Logo className="h-8 w-8 text-primary-foreground bg-primary p-1.5 rounded-md" />
             <h1 className="text-xl font-semibold tracking-tight text-foreground">
               Invoice Insights
             </h1>
@@ -141,8 +141,8 @@ export default function Home() {
       <main className="flex-1 container mx-auto py-8 px-4 md:px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 items-start">
           
-          <div className="col-span-1 md:col-span-1 lg:col-span-2 space-y-8">
-            <Card className="shadow-lg">
+          <div className="col-span-1 md:col-span-1 lg:col-span-2 space-y-8 sticky top-24">
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="text-2xl">Upload Invoices</CardTitle>
                 <CardDescription>
@@ -165,7 +165,7 @@ export default function Home() {
           
           <div className="col-span-1 md:col-span-1 lg:col-span-3">
             {results.length > 0 ? (
-              <Card className="shadow-lg">
+              <Card className="shadow-sm">
                 <CardHeader>
                   <div>
                     <CardTitle>Extracted Data</CardTitle>
@@ -184,19 +184,19 @@ export default function Home() {
                 </CardContent>
               </Card>
             ) : (
-                <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg h-full">
-                    <div className="mb-4">
-                        <svg className="w-16 h-16 text-muted-foreground mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                <div className="flex flex-col items-center justify-center text-center p-12 border-2 border-dashed rounded-lg h-[calc(100vh-15rem)]">
+                    <div className="mb-4 p-4 bg-primary/10 rounded-full">
+                        <Inbox className="w-12 h-12 text-primary" strokeWidth={1.5} />
                     </div>
-                    <h3 className="text-xl font-semibold text-foreground">No data yet</h3>
-                    <p className="text-muted-foreground mt-2">Upload an invoice to see the extracted data here.</p>
+                    <h3 className="text-2xl font-semibold text-foreground">No data yet</h3>
+                    <p className="text-muted-foreground mt-2 max-w-md">Your extracted invoice data will appear here once you upload a document.</p>
                 </div>
             )}
           </div>
         </div>
       </main>
 
-      <footer className="border-t py-6 mt-auto bg-card">
+      <footer className="border-t py-6 mt-auto bg-card/80">
         <div className="container mx-auto text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} Invoice Insights. All rights reserved.</p>
         </div>
