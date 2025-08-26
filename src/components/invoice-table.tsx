@@ -5,17 +5,18 @@ import * as XLSX from 'xlsx';
 import JSZip from 'jszip';
 import type { ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 import type { ExtractedFile } from './extracted-files-card';
+
 import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "@/components/ui/table";
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, ChevronDown, Trash2, Pencil } from 'lucide-react';
+import { Download, ChevronDown, Trash2, Pencil, FileText } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,6 +35,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Separator } from './ui/separator';
 
 export type InvoiceEntry = Extract<ExtractInvoiceDataOutput, any[]>[number] & { id: string };
 
@@ -46,13 +48,14 @@ interface InvoiceTableProps {
 
 const tableHeaders = [
   'SL No.', 'Client Name', 'Client ID', 'Invoice No', 'Invoice Date', 'Period', 'Purpose',
-  'Amount (excl. GST)', 'GST % Used', 'Total incl. GST', 'Status', 'Link', 'File Name', 'Actions'
+  'Amount (excl. GST)', 'GST % Used', 'Total incl. GST', 'Status', 'Link', 'File Name'
 ];
 
 const dataKeys = [
   'slNo', 'clientName', 'clientId', 'invoiceNo', 'invoiceDate', 'period', 'purpose',
   'amountExclGST', 'gstPercentage', 'totalInclGST', 'status', 'link', 'fileName'
 ];
+
 
 export function InvoiceTable({ data, sourceFiles, onEdit, onDelete }: InvoiceTableProps) {
   const formatCurrency = (amount: number | undefined) => {
@@ -61,7 +64,7 @@ export function InvoiceTable({ data, sourceFiles, onEdit, onDelete }: InvoiceTab
   };
 
   const getStatusBadge = (status: string | undefined) => {
-    if (!status) return null;
+    if (!status) return <Badge variant="outline">Unknown</Badge>;
     const lowerStatus = status.toLowerCase();
     switch (lowerStatus) {
       case 'paid':
@@ -182,65 +185,84 @@ export function InvoiceTable({ data, sourceFiles, onEdit, onDelete }: InvoiceTab
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <div className="rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {tableHeaders.map(header => <TableHead key={header}>{header}</TableHead>)}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((row, index) => (
-              <TableRow key={row.id}>
-                <TableCell>{index + 1}</TableCell>
-                <TableCell>{row.clientName || 'N/A'}</TableCell>
-                <TableCell>{row.clientId || 'N/A'}</TableCell>
-                <TableCell className="font-medium">{row.invoiceNo || 'N/A'}</TableCell>
-                <TableCell>{row.invoiceDate || 'N/A'}</TableCell>
-                <TableCell>{row.period || 'N/A'}</TableCell>
-                <TableCell className="max-w-xs truncate">{row.purpose || 'N/A'}</TableCell>
-                <TableCell className="text-right">{formatCurrency(row.amountExclGST)}</TableCell>
-                <TableCell className="text-center">{row.gstPercentage ? `${row.gstPercentage}%` : 'N/A'}</TableCell>
-                <TableCell className="text-right font-semibold">{formatCurrency(row.totalInclGST)}</TableCell>
-                <TableCell>{getStatusBadge(row.status)}</TableCell>
-                <TableCell>
-                  {row.link ? <a href={row.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">View</a> : 'N/A'}
-                </TableCell>
-                <TableCell className="max-w-[150px] truncate">{row.fileName || 'N/A'}</TableCell>
-                <TableCell>
-                    <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => onEdit(row)}>
-                            <Pencil className="h-4 w-4" />
-                            <span className="sr-only">Edit</span>
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                             <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                                <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">Delete</span>
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete this
-                                invoice entry.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => onDelete(row.id)}>Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                    </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+
+      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+        {data.map((row) => (
+          <Card key={row.id} className="flex flex-col">
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-lg">{row.clientName || 'N/A'}</CardTitle>
+                    <CardDescription>Invoice #: {row.invoiceNo || 'N/A'}</CardDescription>
+                  </div>
+                  {getStatusBadge(row.status)}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4 flex-grow">
+              <div className="text-sm text-muted-foreground space-y-2">
+                  <p className="truncate">
+                    <span className="font-semibold text-foreground">Purpose:</span> {row.purpose || 'N/A'}
+                  </p>
+                  <div className="flex justify-between">
+                    <p><span className="font-semibold text-foreground">Date:</span> {row.invoiceDate || 'N/A'}</p>
+                    <p><span className="font-semibold text-foreground">Period:</span> {row.period || 'N/A'}</p>
+                  </div>
+              </div>
+              <Separator />
+              <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Amount (excl. GST)</p>
+                    <p className="font-semibold">{formatCurrency(row.amountExclGST)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">GST %</p>
+                    <p className="font-semibold">{row.gstPercentage ? `${row.gstPercentage}%` : 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Total</p>
+                    <p className="font-bold text-primary-foreground">{formatCurrency(row.totalInclGST)}</p>
+                  </div>
+              </div>
+            </CardContent>
+            <CardFooter className="bg-muted/50 p-4 flex justify-between items-center">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground truncate">
+                 <FileText className="h-4 w-4 flex-shrink-0" />
+                 <span className="truncate">{row.fileName || 'N/A'}</span>
+                 {row.link && <a href={row.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline ml-2 flex-shrink-0">View</a>}
+              </div>
+               <div className="flex items-center gap-1 flex-shrink-0">
+                  <Button variant="ghost" size="icon" onClick={() => onEdit(row)}>
+                      <Pencil className="h-4 w-4" />
+                      <span className="sr-only">Edit</span>
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete this
+                          invoice entry.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => onDelete(row.id)}>Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+              </div>
+            </CardFooter>
+          </Card>
+        ))}
       </div>
     </div>
   );
 }
+
+    
