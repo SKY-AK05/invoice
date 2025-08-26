@@ -220,7 +220,7 @@ export function InvoiceTable({ data, sourceFiles, onEdit, onDelete }: InvoiceTab
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Total</p>
-                    <p className="font-bold text-primary-foreground">{formatCurrency(row.totalInclGST)}</p>
+                    <p className="font-bold text-primary">{formatCurrency(row.totalInclGST)}</p>
                   </div>
               </div>
             </CardContent>
@@ -264,5 +264,3 @@ export function InvoiceTable({ data, sourceFiles, onEdit, onDelete }: InvoiceTab
     </div>
   );
 }
-
-    
