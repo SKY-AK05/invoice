@@ -19,6 +19,7 @@ const acceptedFileTypes = [
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/zip',
+  'application/x-zip-compressed',
 ];
 
 const fileExtensionsToMimeType: Record<string, string> = {
@@ -51,7 +52,7 @@ export function InvoiceUploader({ onFilesExtract }: InvoiceUploaderProps) {
     setIsProcessing(true);
     setStatusText(`Processing ${file.name}...`);
     
-    if (file.type === 'application/zip') {
+    if (file.type === 'application/zip' || file.type === 'application/x-zip-compressed') {
       try {
         const zip = await JSZip.loadAsync(file);
         const extractedFiles: ExtractedFile[] = [];
