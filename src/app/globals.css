@@ -58,35 +58,35 @@ body {
   }
  
   .dark {
-    --background: 60 4% 11%; /* #1D1D1B */
-    --foreground: 0 0% 100%; /* #FFFFFF */
+    --background: 40 6% 12%; /* #22211f - Dark Black */
+    --foreground: 60 30% 96%; /* #f5f5dc - Cream White */
  
-    --card: 60 4% 14%; /* A slightly lighter shade for cards */
-    --card-foreground: 0 0% 100%;
+    --card: 40 6% 15%; /* A slightly lighter shade for cards */
+    --card-foreground: 60 30% 96%;
  
-    --popover: 60 4% 11%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 40 6% 12%;
+    --popover-foreground: 60 30% 96%;
  
-    /* Primary: Deep Blue */
-    --primary: 240 100% 10%; /* #000033 */
-    --primary-foreground: 0 0% 100%;
+    /* Primary: A creamier, less saturated accent */
+    --primary: 45 40% 80%; 
+    --primary-foreground: 40 10% 15%;
  
-    --secondary: 240 100% 15%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 40 6% 20%;
+    --secondary-foreground: 60 30% 96%;
  
-    --muted: 240 100% 15%;
-    --muted-foreground: 0 0% 70%;
+    --muted: 40 6% 20%;
+    --muted-foreground: 60 30% 80%;
  
-    /* Accent: A slightly lighter blue for hover states */
-    --accent: 240 100% 18%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent: A slightly brighter cream for hover states */
+    --accent: 40 6% 22%;
+    --accent-foreground: 60 30% 98%;
  
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
  
-    --border: 240 100% 20%;
-    --input: 240 100% 15%;
-    --ring: 240 100% 30%;
+    --border: 40 6% 25%;
+    --input: 40 6% 20%;
+    --ring: 45 40% 80%;
 
     --sidebar-background: 222.2 84% 4.9%;
     --sidebar-foreground: 210 40% 98%;
