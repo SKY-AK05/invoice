@@ -45,8 +45,8 @@ export function ExtractedFilesCard({ files, onProcessFile, onClear }: ExtractedF
 
   const isClickable = (file: ExtractedFile) => file.status === 'error';
   
-  const completedCount = files.filter(f => f.status === 'completed').length;
-  const progressValue = files.length > 0 ? (completedCount / files.length) * 100 : 0;
+  const processedCount = files.filter(f => f.status === 'completed' || f.status === 'error').length;
+  const progressValue = files.length > 0 ? (processedCount / files.length) * 100 : 0;
   
   return (
     <Card className="shadow-lg">
@@ -54,7 +54,7 @@ export function ExtractedFilesCard({ files, onProcessFile, onClear }: ExtractedF
         <div>
             <CardTitle>Processing Queue</CardTitle>
             <CardDescription>
-                {completedCount} of {files.length} files processed.
+                {processedCount} of {files.length} files processed.
             </CardDescription>
         </div>
          <Button variant="ghost" size="icon" onClick={onClear} aria-label="Clear extracted files">
