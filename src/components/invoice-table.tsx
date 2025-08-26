@@ -15,33 +15,46 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, ChevronDown } from 'lucide-react';
+import { Download, ChevronDown, Trash2, Pencil } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
-
-type InvoiceEntry = Extract<ExtractInvoiceDataOutput, any[]>[number];
+export type InvoiceEntry = Extract<ExtractInvoiceDataOutput, any[]>[number] & { id: string };
 
 interface InvoiceTableProps {
   data: InvoiceEntry[];
   sourceFiles: ExtractedFile[];
+  onEdit: (invoice: InvoiceEntry) => void;
+  onDelete: (invoiceId: string) => void;
 }
 
 const tableHeaders = [
   'SL No.', 'Client Name', 'Client ID', 'Invoice No', 'Invoice Date', 'Period', 'Purpose',
-  'Amount (excl. GST)', 'GST % Used', 'Total incl. GST', 'Status', 'Link', 'File Name'
+  'Amount (excl. GST)', 'GST % Used', 'Total incl. GST', 'Status', 'Link', 'File Name', 'Actions'
 ];
 
-const dataKeys: (keyof InvoiceEntry | 'slNo' | 'clientId')[] = [
+const dataKeys = [
   'slNo', 'clientName', 'clientId', 'invoiceNo', 'invoiceDate', 'period', 'purpose',
   'amountExclGST', 'gstPercentage', 'totalInclGST', 'status', 'link', 'fileName'
 ];
 
-export function InvoiceTable({ data, sourceFiles }: InvoiceTableProps) {
+export function InvoiceTable({ data, sourceFiles, onEdit, onDelete }: InvoiceTableProps) {
   const formatCurrency = (amount: number | undefined) => {
     if (typeof amount !== 'number') return 'N/A';
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
@@ -77,7 +90,8 @@ export function InvoiceTable({ data, sourceFiles }: InvoiceTableProps) {
   };
 
   const handleExportCSV = () => {
-    const csvRows = [tableHeaders.join(',')];
+    const csvHeaders = tableHeaders.filter(h => h !== 'Actions');
+    const csvRows = [csvHeaders.join(',')];
     data.forEach((row, index) => {
       const values = dataKeys.map(key => {
         if (key === 'slNo') return (index + 1).toString();
@@ -94,10 +108,12 @@ export function InvoiceTable({ data, sourceFiles }: InvoiceTableProps) {
   };
 
   const handleExportExcel = () => {
+    const excelHeaders = tableHeaders.filter(h => h !== 'Actions');
     const worksheetData = data.map((row, index) => {
         const newRow: Record<string, any> = { 'SL No.': index + 1 };
-        tableHeaders.slice(1).forEach((header, i) => {
-            newRow[header] = row[dataKeys[i+1] as keyof InvoiceEntry];
+        excelHeaders.slice(1).forEach((header, i) => {
+            const key = dataKeys[i+1];
+            newRow[header] = row[key as keyof InvoiceEntry];
         });
         return newRow;
     });
@@ -114,10 +130,12 @@ export function InvoiceTable({ data, sourceFiles }: InvoiceTableProps) {
     const zip = new JSZip();
 
     // 1. Add Excel file
+    const excelHeaders = tableHeaders.filter(h => h !== 'Actions');
     const worksheetData = data.map((row, index) => {
         const newRow: Record<string, any> = { 'SL No.': index + 1 };
-        tableHeaders.slice(1).forEach((header, i) => {
-            newRow[header] = row[dataKeys[i+1] as keyof InvoiceEntry];
+        excelHeaders.slice(1).forEach((header, i) => {
+            const key = dataKeys[i+1];
+            newRow[header] = row[key as keyof InvoiceEntry];
         });
         return newRow;
     });
@@ -129,14 +147,12 @@ export function InvoiceTable({ data, sourceFiles }: InvoiceTableProps) {
 
     // 2. Add source files
     sourceFiles.forEach(file => {
-        // Extract base64 content from data URI
         const base64String = file.dataUri.split(',')[1];
         if (base64String) {
             zip.file(file.name, base64String, { base64: true });
         }
     });
     
-    // 3. Generate and download ZIP
     const zipBlob = await zip.generateAsync({ type: "blob" });
     triggerDownload(zipBlob, `invoice_insights_archive_${new Date().toISOString().split('T')[0]}.zip`);
   };
@@ -159,6 +175,7 @@ export function InvoiceTable({ data, sourceFiles }: InvoiceTableProps) {
             <DropdownMenuItem onSelect={handleExportExcel}>
               Download Excel (.xlsx)
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={handleExportZip}>
               Download as ZIP
             </DropdownMenuItem>
@@ -174,7 +191,7 @@ export function InvoiceTable({ data, sourceFiles }: InvoiceTableProps) {
           </TableHeader>
           <TableBody>
             {data.map((row, index) => (
-              <TableRow key={`${row.invoiceNo}-${row.purpose}-${index}`}>
+              <TableRow key={row.id}>
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>{row.clientName || 'N/A'}</TableCell>
                 <TableCell>{row.clientId || 'N/A'}</TableCell>
@@ -190,6 +207,35 @@ export function InvoiceTable({ data, sourceFiles }: InvoiceTableProps) {
                   {row.link ? <a href={row.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">View</a> : 'N/A'}
                 </TableCell>
                 <TableCell className="max-w-[150px] truncate">{row.fileName || 'N/A'}</TableCell>
+                <TableCell>
+                    <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => onEdit(row)}>
+                            <Pencil className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                             <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                                <span className="sr-only">Delete</span>
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete this
+                                invoice entry.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => onDelete(row.id)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

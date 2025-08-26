@@ -9,25 +9,29 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { InvoiceUploader } from '@/components/invoice-uploader';
-import { InvoiceTable } from '@/components/invoice-table';
+import { InvoiceTable, type InvoiceEntry } from '@/components/invoice-table';
 import { ExtractedFilesCard, type ExtractedFile } from '@/components/extracted-files-card';
 import { Logo } from '@/components/icons';
 import { XCircle } from 'lucide-react';
+import { EditInvoiceDialog } from '@/components/edit-invoice-dialog';
 
-type InvoiceEntry = Extract<ExtractInvoiceDataOutput, any[]>[number];
 
 export default function Home() {
   const [extractedFiles, setExtractedFiles] = useState<ExtractedFile[]>([]);
   const [results, setResults] = useState<InvoiceEntry[]>([]);
   const { toast } = useToast();
   const [isProcessingQueue, setIsProcessingQueue] = useState(false);
+  
+  const [editingInvoice, setEditingInvoice] = useState<InvoiceEntry | null>(null);
 
   // Use a ref to ensure the processing function has the latest state
   const filesRef = useRef(extractedFiles);
   filesRef.current = extractedFiles;
 
   const handleFilesExtract = (files: ExtractedFile[]) => {
-    setExtractedFiles(prevFiles => [...prevFiles, ...files]);
+    // Add a unique ID to each result for stable key and editing
+    const filesWithIds = files.map(f => ({ ...f, id: self.crypto.randomUUID() }));
+    setExtractedFiles(prevFiles => [...prevFiles, ...filesWithIds]);
   };
   
   const processFile = async (file: ExtractedFile) => {
@@ -39,7 +43,8 @@ export default function Home() {
     const response = await processInvoice(file.dataUri, file.name);
 
     if (response.success && response.data.length > 0) {
-      setResults(prevResults => [...prevResults, ...response.data]);
+       const newResults = response.data.map(item => ({...item, id: self.crypto.randomUUID()}));
+      setResults(prevResults => [...prevResults, ...newResults]);
       setExtractedFiles(prevFiles => prevFiles.map(f => 
         f.id === file.id ? { ...f, status: 'completed' } : f
       ));
@@ -92,6 +97,24 @@ export default function Home() {
        // Reset status to idle to allow re-processing
        setExtractedFiles(prev => prev.map(f => f.id === file.id ? {...f, status: 'idle'} : f));
      }
+  }
+
+  const handleUpdateInvoice = (updatedInvoice: InvoiceEntry) => {
+    setResults(prev => prev.map(r => r.id === updatedInvoice.id ? updatedInvoice : r));
+    setEditingInvoice(null);
+     toast({
+        title: "Update Successful",
+        description: "The invoice entry has been updated.",
+    });
+  }
+
+  const handleDeleteInvoice = (invoiceId: string) => {
+    setResults(prev => prev.filter(r => r.id !== invoiceId));
+     toast({
+        variant: "destructive",
+        title: "Delete Successful",
+        description: "The invoice entry has been deleted.",
+    });
   }
   
   const hasContent = extractedFiles.length > 0 || results.length > 0;
@@ -147,12 +170,17 @@ export default function Home() {
                   <div>
                     <CardTitle>Extracted Data</CardTitle>
                     <CardDescription>
-                      Review the extracted invoice details below.
+                      Review and manage the extracted invoice details below.
                     </CardDescription>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <InvoiceTable data={results} sourceFiles={extractedFiles.filter(f => f.status === 'completed')} />
+                  <InvoiceTable 
+                    data={results} 
+                    sourceFiles={extractedFiles.filter(f => f.status === 'completed')}
+                    onEdit={setEditingInvoice}
+                    onDelete={handleDeleteInvoice}
+                  />
                 </CardContent>
               </Card>
             ) : (
@@ -173,6 +201,15 @@ export default function Home() {
           <p>&copy; {new Date().getFullYear()} Invoice Insights. All rights reserved.</p>
         </div>
       </footer>
+
+      {editingInvoice && (
+        <EditInvoiceDialog
+          invoice={editingInvoice}
+          onSave={handleUpdateInvoice}
+          onCancel={() => setEditingInvoice(null)}
+          isOpen={!!editingInvoice}
+        />
+      )}
     </div>
   );
 }
